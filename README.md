@@ -1,0 +1,1 @@
+# JotDown (An MCP server to jot down notes in Notion or build your notes book)
