@@ -67,7 +67,7 @@ Jotdown enables LLMs to seamlessly integrate with these systems for various cont
 4. Notion setup:
 
     * Setup Notion connection (internal intergation with access to Notion workspace) & copy the `internal intergration secret` for later use.
-    * Setup a page with title `**Jot It Down**` in your workspace and share it with your connection. This is required for the integration to work.
+    * Setup a page with title `Jot It Down` in your workspace and share it with your connection. This is required for the integration to work.
 
 5. Set up Claude desktop (or any other MCP client) configuration file (for Notion integration):
     ```json
