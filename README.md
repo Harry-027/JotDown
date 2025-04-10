@@ -34,7 +34,7 @@ Jotdown enables LLMs to seamlessly integrate with these systems for various cont
 ### Prerequisites
 
 - **Rust**: Make sure you have Rust installed. You can install it from [rust-lang.org](https://www.rust-lang.org/).
-- **Notion API Token**: You will need a Notion API token (internal integration secret) to integrate with Notion.
+- **Notion API Token**: You will need a Notion API token (`internal integration secret`) to integrate with Notion.
 - **Claude Desktop**: Make sure you have Claude desktop or any other MCP client (Cline, Continue etc) installed and configured with a Notion integration token.
 
 ### Steps to Install
@@ -60,7 +60,7 @@ Jotdown enables LLMs to seamlessly integrate with these systems for various cont
 
 4. Notion setup:
 
-    * Setup Notion connection (internal intergation with access to Notion workspace) & copy the internal intergration secret for later use.
+    * Setup Notion connection (internal intergation with access to Notion workspace) & copy the `internal intergration secret` for later use.
     * Setup a page with title **Jot It Down** in your workspace and share it with your connection. This is required for the integration to work.
 
 5. Set up Claude desktop (or any other MCP client) configuration file (for Notion integration):
