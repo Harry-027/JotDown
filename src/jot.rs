@@ -62,8 +62,8 @@ impl Jotter {
     }
 
     async fn search_ref_page(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        let ref_db_name = "Jot It Down";
-        match self.data_store.search_ref(ref_db_name, "page").await {
+        let ref_page_name = "Jot It Down";
+        match self.data_store.search_ref(ref_page_name, "page").await {
             Ok((_, json_resp)) => {
                 if let Some(page_id) = json_resp
                     .get("results")
