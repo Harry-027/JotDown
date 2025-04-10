@@ -98,7 +98,10 @@ Jotdown enables LLMs to seamlessly integrate with these systems for various cont
 
 ## 🧑‍💻 Demo
 
+Notion Demo -
 ![Demo Notion](./demo/demo_1.gif)
+
+MdBook Demo -
 ![Demo mdbook](./demo/demo_2.gif)
 
 MdBook Screenshots -
