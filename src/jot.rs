@@ -114,7 +114,7 @@ impl Jotter {
     }
 
     fn bundle_mdbook(&self, name: &str, content: Vec<MdBookChapter>) -> Result<std::path::PathBuf, Box<dyn std::error::Error + Send + Sync>> {
-        let file_path = std::env::temp_dir().join(name);
+        let file_path = std::env::home_dir().unwrap().join(name);
         fs::create_dir_all(&file_path)?;
         // Write README.md
         let readme_path = file_path.join("README.md");
@@ -134,20 +134,8 @@ impl Jotter {
             let chapter_path = file_path.join(format!("src/{}", chapter_filename));
             fs::write(&chapter_path, &chapter.content)?;
         }
-        let status = Command::new("mdbook")
-            .arg("build")
-            .arg(&file_path)
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .status()?;
-
-        if status.success() {
-
-            let path_clone = file_path.clone();
-            Ok(path_clone)
-        } else {
-            Err("mdbook build failed".into())
-        }
+        let path_clone = file_path.clone();
+        Ok(path_clone)
     }
 
     async fn open_mdbook (&self, book_path: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -264,7 +252,7 @@ impl Jotter {
       match self.bundle_mdbook(&name, content) {
         Ok(path_buf) => {
             Ok(CallToolResult::success(vec![Content::text(
-                format!("mdbook was created successfully at path: {}", path_buf.display()),
+                format!("File created at: {}, now please run mdbook serve -o to serve it", path_buf.display()),
             )]))
         },
         Err(e) => {
@@ -278,7 +266,7 @@ impl Jotter {
 
     #[tool(description = "Serve mdbook from a given path")]
     async fn serve_mdbook(&self, #[tool(param)] path: String) -> Result<CallToolResult, McpError> {
-        match self.open_mdbook(path).await {
+        match self.open_mdbook(path.clone()).await {
             Ok(_) => {
                 Ok(CallToolResult ::success(vec![Content::text(
                     format!("book served successfully"),
@@ -286,7 +274,7 @@ impl Jotter {
             },
             Err(e) => {
                 Err(McpError::internal_error(
-                    format!("error occurred: open the mdbook operation failed: {}", e),
+                    format!("error occurred: {}, since we are facing the issue ask user to run mdbook serve -o in the path {} to serve the book", e, path.clone()),
                     None,
                 ))
             }
