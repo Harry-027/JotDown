@@ -1,5 +1,6 @@
 use std::fs::{self, File};
 use std::io::Write;
+use std::path::Path;
 use std::process::{Command, Stdio};
 use rmcp::{Error as McpError, ServerHandler, model::*, schemars, tool};
 
@@ -30,7 +31,6 @@ pub struct MdBookChapter {
 }
 
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct Jotter {
     data_store: Notion,
@@ -112,6 +112,59 @@ impl Jotter {
             Err(e) => Err(e.to_string().into()),
         }
     }
+
+    fn bundle_mdbook(&self, name: &str, content: Vec<MdBookChapter>) -> Result<std::path::PathBuf, Box<dyn std::error::Error + Send + Sync>> {
+        let file_path = std::env::temp_dir().join(name);
+        fs::create_dir_all(&file_path)?;
+        // Write README.md
+        let readme_path = file_path.join("README.md");
+        fs::write(&readme_path, "# My MdBook\nWelcome to my book!")?;
+        // Write SUMMARY.md
+        let summary_path = file_path.join("src/SUMMARY.md");
+        if let Some(parent) = summary_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let mut summary = File::create(&summary_path)?;
+        writeln!(summary, "# Summary")?;
+        writeln!(summary, "* [Introduction](README.md)")?;
+        // Write chapters
+        for (i, chapter) in content.iter().enumerate() {
+            let chapter_filename = format!("chapter_{}.md", i);
+            writeln!(summary, "* [{}]({})", chapter.name, chapter_filename)?;
+            let chapter_path = file_path.join(format!("src/{}", chapter_filename));
+            fs::write(&chapter_path, &chapter.content)?;
+        }
+        let status = Command::new("mdbook")
+            .arg("build")
+            .arg(&file_path)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .status()?;
+
+        if status.success() {
+
+            let path_clone = file_path.clone();
+            Ok(path_clone)
+        } else {
+            Err("mdbook build failed".into())
+        }
+    }
+
+    async fn open_mdbook (&self, book_path: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+            let dir = Path::new(book_path.as_str());
+
+            let mut child = Command::new("mdbook")
+            .arg("serve")
+            .arg("-o")
+            .current_dir(dir)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .spawn()?;
+
+            child.wait()?;
+
+            Ok(())
+        }
 
     #[tool(description = "Retrieve a page by its title or content to get the page id")]
     async fn retrieve_page(&self, #[tool(param)] content: String) -> Result<CallToolResult, McpError> {
@@ -203,44 +256,7 @@ impl Jotter {
         }
     }
 
-    fn bundle_mdbook(&self, name: &str, content: Vec<MdBookChapter>) -> Result<std::path::PathBuf, Box<dyn std::error::Error + Send + Sync>> {
-        let file_path = std::env::temp_dir().join(name);    
-        fs::create_dir_all(&file_path)?;
-        // Write README.md
-        let readme_path = file_path.join("README.md");
-        fs::write(&readme_path, "# My MdBook\nWelcome to my book!")?;
-        // Write SUMMARY.md
-        let summary_path = file_path.join("src/SUMMARY.md");
-        if let Some(parent) = summary_path.parent() {
-            fs::create_dir_all(parent)?;
-        }
-        let mut summary = File::create(&summary_path)?;
-        writeln!(summary, "# Summary")?;
-        writeln!(summary, "* [Introduction](README.md)")?;
-        // Write chapters
-        for (i, chapter) in content.iter().enumerate() {
-            let chapter_filename = format!("chapter_{}.md", i);
-            writeln!(summary, "* [{}]({})", chapter.name, chapter_filename)?;
-            let chapter_path = file_path.join(format!("src/{}", chapter_filename));
-            fs::write(&chapter_path, &chapter.content)?;
-        }
-        let status = Command::new("mdbook")
-            .arg("build")
-            .arg(&file_path)
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .status()?;
-    
-        if status.success() {
-            
-            let path_clone = file_path.clone();
-            Ok(path_clone)
-        } else {
-            Err("mdbook build failed".into())
-        }
-    }
-
-    #[tool(description = "Create a mdbook")]
+    #[tool(description = "Create an mdbook for the given name and content")]
     async fn create_mdbook(
         &self,
         #[tool(aggr)] AddMdBook { name, content}: AddMdBook,
@@ -258,7 +274,23 @@ impl Jotter {
             ))
         }
       }
+    }
 
+    #[tool(description = "Serve mdbook from a given path")]
+    async fn serve_mdbook(&self, #[tool(param)] path: String) -> Result<CallToolResult, McpError> {
+        match self.open_mdbook(path).await {
+            Ok(_) => {
+                Ok(CallToolResult ::success(vec![Content::text(
+                    format!("book served successfully"),
+                )]))
+            },
+            Err(e) => {
+                Err(McpError::internal_error(
+                    format!("error occurred: open the mdbook operation failed: {}", e),
+                    None,
+                ))
+            }
+        }
     }
 }
 
