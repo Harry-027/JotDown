@@ -18,13 +18,13 @@ pub struct UpdatePageRequest {
 }
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-pub struct AddGitBook {
+pub struct AddMdBook {
     pub name: String,
-    pub content: Vec<GitBookChapter>
+    pub content: Vec<MdBookChapter>
 }
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-pub struct GitBookChapter {
+pub struct MdBookChapter {
     pub name: String,
     pub content: String
 }
@@ -203,12 +203,12 @@ impl Jotter {
         }
     }
 
-    fn bundle_gitbook(&self, name: &str, content: Vec<GitBookChapter>) -> Result<std::path::PathBuf, Box<dyn std::error::Error + Send + Sync>> {
+    fn bundle_mdbook(&self, name: &str, content: Vec<MdBookChapter>) -> Result<std::path::PathBuf, Box<dyn std::error::Error + Send + Sync>> {
         let file_path = std::env::temp_dir().join(name);    
         fs::create_dir_all(&file_path)?;
         // Write README.md
         let readme_path = file_path.join("README.md");
-        fs::write(&readme_path, "# My GitBook\nWelcome to my book!")?;
+        fs::write(&readme_path, "# My MdBook\nWelcome to my book!")?;
         // Write SUMMARY.md
         let summary_path = file_path.join("src/SUMMARY.md");
         if let Some(parent) = summary_path.parent() {
@@ -224,7 +224,6 @@ impl Jotter {
             let chapter_path = file_path.join(format!("src/{}", chapter_filename));
             fs::write(&chapter_path, &chapter.content)?;
         }
-        // Run gitbook
         let status = Command::new("mdbook")
             .arg("build")
             .arg(&file_path)
@@ -242,20 +241,19 @@ impl Jotter {
     }
 
     #[tool(description = "Create a mdbook")]
-    async fn create_gitbook(
+    async fn create_mdbook(
         &self,
-        #[tool(aggr)] AddGitBook { name, content}: AddGitBook,
+        #[tool(aggr)] AddMdBook { name, content}: AddMdBook,
     ) -> Result<CallToolResult, McpError> {
-      match self.bundle_gitbook(&name, content) {
+      match self.bundle_mdbook(&name, content) {
         Ok(path_buf) => {
-            // Command::new("gitbook").arg("serve").arg(path_buf);
             Ok(CallToolResult::success(vec![Content::text(
                 format!("mdbook was created successfully at path: {}", path_buf.display()),
             )]))
         },
         Err(e) => {
             Err(McpError::internal_error(
-                format!("error occurred: create the gitbook operation failed: {}", e),
+                format!("error occurred: create the mdbook operation failed: {}", e),
                 None,
             ))
         }
@@ -273,7 +271,7 @@ impl ServerHandler for Jotter {
                 .enable_tools()
                 .build(),
             server_info: Implementation::from_build_env(),
-            instructions: Some("This server provides a tool to jot down your notes to Notion. You can create new pages on Notion or also bundle those notes into a gitbook".to_string()),
+            instructions: Some("This server provides a tool to jot down your notes to Notion. You can create new pages on Notion or also bundle those notes into a mdbook".to_string()),
         }
     }
 }
