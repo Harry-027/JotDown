@@ -30,3 +30,4 @@ dotenv = "0.15"
 reqwest = { version = "0.11", features = ["json"] }
 schemars = { version = "0.8", optional = true }
 dirs = "5"
+regex = "1.9.5"
