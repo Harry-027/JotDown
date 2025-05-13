@@ -5,6 +5,10 @@ use std::process::{Command, Stdio};
 use rmcp::{Error as McpError, ServerHandler, model::*, schemars, tool};
 
 use crate::notion::Notion;
+use crate::formatter::{split_content, format_for_notion};
+
+// Maximum size of a block in the Notion API
+const MAX_BLOCK_SIZE: usize = 2000;
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 pub struct AddPageRequest {
@@ -181,13 +185,22 @@ impl Jotter {
 
     #[tool(description = "Updates a page for given content and page id")]
     async fn update_page(&self, #[tool(aggr)] UpdatePageRequest { page_id, content }: UpdatePageRequest) -> Result<CallToolResult, McpError> {
-            match self.data_store.update_page(page_id.as_str(), content.as_str()).await {
-                Ok((_, val)) => Ok(CallToolResult::success(vec![Content::text(val.to_string())])),
-                Err(e) => Err(McpError::internal_error(
-                    format!("error occurred: error updating page: {}", e),
-                    None,
-                )),
-            }
+        // Split and format the content
+        let content_chunks = split_content(&content, MAX_BLOCK_SIZE);
+        let mut all_blocks = Vec::new();
+        
+        for chunk in content_chunks {
+            all_blocks.extend(format_for_notion(&chunk));
+        }
+        
+        // Use the new update_page_with_blocks method
+        match self.data_store.update_page_with_blocks(page_id.as_str(), &all_blocks).await {
+            Ok((_, val)) => Ok(CallToolResult::success(vec![Content::text(val.to_string())])),
+            Err(e) => Err(McpError::internal_error(
+                format!("error occurred: error updating page: {}", e),
+                None,
+            )),
+        }
     }
 
     #[tool(description = "Create a new page")]
@@ -195,38 +208,39 @@ impl Jotter {
         &self,
         #[tool(aggr)] AddPageRequest { title, content }: AddPageRequest,
     ) -> Result<CallToolResult, McpError> {
+        // Split and format the content
+        let content_chunks = split_content(&content, MAX_BLOCK_SIZE);
+        let mut all_blocks = Vec::new();
+        
+        for chunk in content_chunks {
+            all_blocks.extend(format_for_notion(&chunk));
+        }
+        
         match self.search_ref_db().await {
-            Ok(db_id) => match self
-                .create_page(db_id.as_str(), title.as_str(), content.as_str())
-                .await
-            {
-                Ok(resp) => Ok(CallToolResult::success(vec![Content::text(
-                    resp.to_string(),
-                )])),
-                Err(e) => Err(McpError::internal_error(
-                    format!("error occurred: error creating page: {}", e),
-                    None,
-                )),
+            Ok(db_id) => {
+                // Use the new create_page_with_blocks method
+                match self.data_store.create_page_with_blocks(&db_id, &title, &all_blocks).await {
+                    Ok((_, json_resp)) => Ok(CallToolResult::success(vec![Content::text(
+                        json_resp.to_string(),
+                    )])),
+                    Err(e) => Err(McpError::internal_error(
+                        format!("error occurred: error creating page: {}", e),
+                        None,
+                    )),
+                }
             },
-            Err(e) => {
-                // eprintln!("error finding ref db:: {}", e);
-                // println!("will search for ref page to create a new db");
+            Err(_e) => {
                 if let Ok(page_id) = self.search_ref_page().await {
-                    // println!("creating a new ref db!");
                     match self.create_ref_db(page_id.as_str()).await {
                         Ok(db_id) => {
-                            if let Ok(resp) = self
-                                .create_page(db_id.as_str(), title.as_str(), content.as_str())
-                                .await
-                            {
-                                Ok(CallToolResult::success(vec![Content::text(
-                                    resp.to_string(),
-                                )]))
-                            } else {
-                                Err(McpError::internal_error(
+                            match self.data_store.create_page_with_blocks(&db_id, &title, &all_blocks).await {
+                                Ok((_, json_resp)) => Ok(CallToolResult::success(vec![Content::text(
+                                    json_resp.to_string(),
+                                )])),
+                                Err(e) => Err(McpError::internal_error(
                                     format!("error occurred: error creating page: {}", e),
                                     None,
-                                ))
+                                )),
                             }
                         }
                         Err(e) => Err(McpError::internal_error(
