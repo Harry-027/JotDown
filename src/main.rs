@@ -1,3 +1,4 @@
+pub mod formatter;
 pub mod jot;
 pub mod notion;
 pub mod util;
