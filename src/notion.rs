@@ -199,34 +199,7 @@ impl Notion {
         .await
     }
 
-    pub async fn update_page(&self, page_id: &str, content: &str) -> Result<(StatusCode, Value)> {
-        let page_update_url = format!("https://api.notion.com/v1/blocks/{}/children", page_id);
-        let body = json!({
-           	"children": [
-          		{
-         			"object": "block",
-         			"type": "paragraph",
-         			"paragraph": {
-            				"rich_text": [
-               					{
-                  						"type": "text",
-                  						"text": {
-                         			        "content":content
-                                        }
-               					}
-            				]
-         			}
-          		}
-           	]
-        });
-        send_request(
-            page_update_url.as_str(),
-            ReqMethod::Patch,
-            Some(body),
-            self.token.as_str(),
-        )
-        .await
-    }
+
     
     /// Updates a page with new formatted blocks
     ///
