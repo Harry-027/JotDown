@@ -77,64 +77,7 @@ impl Notion {
         .await
     }
 
-    pub async fn create_page(
-        &self,
-        database_id: &str,
-        title: &str,
-        content: &str,
-    ) -> Result<(StatusCode, Value)> {
-        let body = json!({
-            "parent": {
-                "database_id": database_id
-            },
-            "icon": {
-                "emoji": "🥬"
-            },
-            "properties": {
-                "Name": {
-                    "title": [
-                        {
-                            "text": {
-                                "content": title
-                            }
-                        }
-                    ]
-                },
-                "Content": {
-                    "rich_text": [
-                        {
-                            "text": {
-                                "content": "Content noted by Jotdown MCP server"
-                            }
-                        }
-                    ]
-                }
-            },
-            "children": [
-                {
-            "object": "block",
-            "type": "paragraph",
-            "paragraph": {
-                "rich_text": [
-                    {
-                        "type": "text",
-                        "text": {
-                            "content": content
-                        }
-                    }
-                ]
-            }
-        }
-            ]
-        });
-        send_request(
-            CREATE_PAGE_URL,
-            ReqMethod::Post,
-            Some(body),
-            self.token.as_str(),
-        )
-        .await
-    }
+
 
     /// Creates a page using formatted blocks
     ///
