@@ -9,6 +9,7 @@ dependencies = [
  "anyhow",
  "dirs",
  "dotenv",
+ "regex",
  "reqwest",
  "rmcp",
  "schemars",
