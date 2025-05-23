@@ -105,17 +105,6 @@ impl Jotter {
         }
     }
 
-    async fn create_page(
-        &self,
-        db_id: &str,
-        title: &str,
-        content: &str,
-    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        match self.data_store.create_page(db_id, title, content).await {
-            Ok((_, json_resp)) => Ok(json_resp.to_string()),
-            Err(e) => Err(e.to_string().into()),
-        }
-    }
 
     fn bundle_mdbook(&self, name: &str, content: Vec<MdBookChapter>) -> Result<std::path::PathBuf, Box<dyn std::error::Error + Send + Sync>> {
         let file_path = std::env::home_dir().unwrap().join(name);
