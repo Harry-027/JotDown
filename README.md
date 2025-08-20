@@ -1,4 +1,5 @@
 # Jotdown - MCP Server for Notion Page Creation and mdBook Generation
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/Harry-027/JotDown)](https://archestra.ai/mcp-catalog/harry-027__jotdown)
 
 Jotdown is a Model Context Protocol (MCP) server that allows large language models (LLMs) to interact with **Notion** and also generate **Markdown Books**. It provides two primary tools for LLMs:
 
