@@ -7,6 +7,10 @@ Jotdown is a Model Context Protocol (MCP) server that allows large language mode
 
 Jotdown enables LLMs to seamlessly integrate with these systems for various content management and publishing workflows.
 
+<a href="https://glama.ai/mcp/servers/@Harry-027/JotDown">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@Harry-027/JotDown/badge" alt="Jotdown MCP server" />
+</a>
+
 ---
 
 ## Certified by MCPHub
