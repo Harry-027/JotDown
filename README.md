@@ -27,6 +27,10 @@ Jotdown enables LLMs to seamlessly integrate with these systems for various cont
 
 ---
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/harry-027-jotdown).
+
 ## Tools Provided by Jotdown
 
 ### 1. **Notion Page Tool**
